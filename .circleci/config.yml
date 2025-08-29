@@ -8,42 +8,60 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Lets build and push image
+          name: Build & Push Docker image
           command: |
-            version="build-$CIRCLE_BUILD_NUM"
-            echo $version
-            docker build -t buraksefil17/todo-app:$version .
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker push buraksefil17/todo-app:$version
+            set -euo pipefail
+            TAG="build-$CIRCLE_BUILD_NUM"
+            echo "TAG=$TAG"
+            docker build -t "buraksefil17/todo-app:$TAG" .
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker push "buraksefil17/todo-app:$TAG"
 
-  Update_manifest:
+  update_manifest:
     docker:
       - image: cimg/base:2023.06
     steps:
       - checkout
-      - setup_remote_docker
+      # manifest güncellemesi için docker gerekmiyor; setup_remote_docker kaldırıldı
       - run:
-          name: Updating Manifest file 
+          name: Update kube_manifest with new image tag
           command: |
-            TAG=$CIRCLE_BUILD_NUM
-            ((TAG--))
+            set -euo pipefail
+
+            TAG="build-$CIRCLE_BUILD_NUM"
+            echo "Using TAG=$TAG"
+
+            # Repo'yu token ile klonlamak yerine public read ile klonla, push öncesi remote'u token'lı yap
             git clone https://github.com/buraksefil/kube_manifest.git
-            git config --global user.email "buraksefil@yahoo.com"
-            git config --global user.name "buraksefil"
-            pwd
             cd kube_manifest
-            pwd
-            echo $TAG
-            sed -i "s/build-.*/build-$TAG/g" manifest/deployment.yaml
+
+            git config user.email "buraksefil@yahoo.com"
+            git config user.name "buraksefil"
+
+            # Manifest'teki image satırını tek seferde DOĞRU repo + tag ile güncelle
+            # Yalnızca todo-app image'ını hedefleyen güvenli bir regex:
+            sed -E -i 's|^( *image: *)(buraksefil17?/todo-app:.*)$|\1buraksefil17/todo-app:'"$TAG"'|' manifest/deployment.yaml
+
+            echo "Updated manifest:"
             cat manifest/deployment.yaml
-            git add .
-            git commit -m "new build with imgTag build-$TAG"
-            git config credential.helper 'cache --timeout=120'
-            git push -q https://$GITHUB_PERSONAL_TOKEN@github.com/buraksefil/kube_manifest.git main 
+
+            # Değişiklik var mı kontrol et; yoksa clean exit
+            if git diff --quiet; then
+              echo "No changes in manifest (already at $TAG). Skipping commit/push."
+              exit 0
+            fi
+
+            git add manifest/deployment.yaml
+            git commit -m "chore: bump image to buraksefil17/todo-app:${TAG}"
+
+            # Push için token'lı remote kullan
+            git remote set-url origin "https://${GITHUB_PERSONAL_TOKEN}@github.com/buraksefil/kube_manifest.git"
+            git push origin main -q
+
 workflows:
   GitOpsflow:
     jobs:
       - build_and_push
-      - Update_manifest:
+      - update_manifest:
           requires:
             - build_and_push
