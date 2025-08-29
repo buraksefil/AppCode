@@ -54,8 +54,8 @@ jobs:
             git add manifest/deployment.yaml
             git commit -m "chore: bump image to buraksefil17/todo-app:${TAG}"
 
-            # Push için token'lı remote kullan
-            git remote set-url origin "https://${GITHUB_PERSONAL_TOKEN}@github.com/buraksefil/kube_manifest.git"
+           # Push için token'lı remote kullan (username:token formatı)
+            git remote set-url origin "https://${GITHUB_USERNAME}:${GITHUB_PERSONAL_TOKEN}@github.com/buraksefil/kube_manifest.git"
             git push origin main -q
 
 workflows:
