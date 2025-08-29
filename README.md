@@ -1,4 +1,4 @@
-##Screenshot the App on Loadbalancer
+##Screenshot the App on Loadbalancer by buraksefil
 ![App Screenshot](./Screenshot.png)
 
 # Deploying Dockerized App on AWS EKS Cluster using ArgoCD and GitOps methodology with CircleCI
