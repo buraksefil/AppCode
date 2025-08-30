@@ -1,4 +1,4 @@
-##Screenshot the App on Loadbalancer by buraksefil
+##Screenshots by buraksefil
 ![App Screenshot](./Screenshot.png)
 
 ![ArgoCD](./Screenshot_argocd.png)
