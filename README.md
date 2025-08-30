@@ -1,6 +1,8 @@
 ##Screenshot the App on Loadbalancer by buraksefil
 ![App Screenshot](./Screenshot.png)
 
+![ArgoCD](./Screenshot_argocd.png)
+
 # Deploying Dockerized App on AWS EKS Cluster using ArgoCD and GitOps methodology with CircleCI
 
 This repository contains the code of the React application called ToDo-App. I've created this to Deploy it on Kubernetes cluster by GitOps workflow
